@@ -66,7 +66,7 @@ subprojects {
         }
 
         withType<AbstractArchiveTask> {
-            archiveBaseName.set("noxesium-${project.name}")
+            archiveBaseName.set("noxesium-sync-${project.name}")
         }
 
         withType<KotlinCompile> {
@@ -113,7 +113,7 @@ subprojects {
 }
 
 // Create a task to collect all jars
-val projectsToCollect = listOf("sync-fabric", "sync-paper")
+val projectsToCollect = listOf("fabric", "paper")
 tasks.register<Copy>("collectAllJars") {
     group = "publishing"
     description = "Collects all JARs from subprojects into one directory"
