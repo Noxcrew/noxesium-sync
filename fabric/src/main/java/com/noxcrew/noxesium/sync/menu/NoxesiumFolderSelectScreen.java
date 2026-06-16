@@ -45,7 +45,7 @@ public class NoxesiumFolderSelectScreen extends Screen {
                                     folderSyncSystem.activateFolder(folderId, path);
                                 }
                             });
-                    Minecraft.getInstance().setScreen(null);
+                    Minecraft.getInstance().gui.setScreen(null);
                 })
                 .bounds(0, 0, 100, 20)
                 .build();

@@ -104,7 +104,7 @@ public class NoxesiumSyncSettingsScreen extends Screen {
     @Override
     public void onClose() {
         super.onClose();
-        this.minecraft.setScreen(this.lastScreen);
+        this.minecraft.gui.setScreen(this.lastScreen);
     }
 
     private void openBrowseMenu(String folderId, MultiLineEditBox editBox) {

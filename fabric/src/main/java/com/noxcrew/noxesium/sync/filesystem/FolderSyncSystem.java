@@ -161,7 +161,7 @@ public class FolderSyncSystem extends NoxesiumFeature implements BackgroundTaskF
         }
         text = text.append(CommonComponents.SPACE);
         text = text.append(Component.translatable("noxesium.screen.sync.request.footer"));
-        Minecraft.getInstance().setScreen(new NoxesiumFolderSyncScreen(text, folderId));
+        Minecraft.getInstance().gui.setScreen(new NoxesiumFolderSyncScreen(text, folderId));
     }
 
     /**

@@ -14,9 +14,9 @@ public class NoxesiumFolderSyncScreen extends ConfirmScreen {
         super(
                 (value) -> {
                     if (value) {
-                        Minecraft.getInstance().setScreen(new NoxesiumFolderSelectScreen(folderId));
+                        Minecraft.getInstance().gui.setScreen(new NoxesiumFolderSelectScreen(folderId));
                     } else {
-                        Minecraft.getInstance().setScreen(null);
+                        Minecraft.getInstance().gui.setScreen(null);
                     }
                 },
                 Component.empty(),

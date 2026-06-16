@@ -23,7 +23,7 @@ public class NoxesiumSettingsScreenMixin {
         if (folderSyncSystem.getCurrentSyncedFolders().isEmpty()) return;
         var settingsScreen = (NoxesiumSettingsScreen) (Object) this;
         rowHelper.addChild(Button.builder(Component.translatable("noxesium.options.sync.folders"), (button) -> {
-                    Minecraft.getInstance().setScreen(new NoxesiumSyncSettingsScreen(settingsScreen));
+                    Minecraft.getInstance().gui.setScreen(new NoxesiumSyncSettingsScreen(settingsScreen));
                 })
                 .bounds(0, 0, 150, 20)
                 .build());
