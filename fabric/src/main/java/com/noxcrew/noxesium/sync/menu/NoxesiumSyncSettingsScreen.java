@@ -56,7 +56,9 @@ public class NoxesiumSyncSettingsScreen extends Screen {
     protected void addContents() {
         this.layout.addToContents(contents);
         if (!config.syncableFolders.containsKey(serverId)) {
-            var header = new StringWidget(Component.literal("Connect to a server with Noxesium Sync to see settings!"), Minecraft.getInstance().font);
+            var header = new StringWidget(
+                    Component.literal("Connect to a server with Noxesium Sync to see settings!"),
+                    Minecraft.getInstance().font);
             var verticalLayout = contents.addChild(LinearLayout.vertical().spacing(3));
             verticalLayout.addChild(header);
             return;

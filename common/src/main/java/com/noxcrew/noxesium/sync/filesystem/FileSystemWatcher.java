@@ -1,24 +1,17 @@
 package com.noxcrew.noxesium.sync.filesystem;
 
 import com.noxcrew.noxesium.api.NoxesiumApi;
-
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchKey;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.eclipse.jgit.ignore.IgnoreNode;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -56,7 +49,6 @@ public class FileSystemWatcher implements Closeable {
     @NotNull
     private final Map<String, FileSystemWatcher> directories = new ConcurrentHashMap<>();
 
-
     public FileSystemWatcher(@NotNull Path folder, @NotNull String path, @NotNull ParentFileSystemWatcher parent) {
         try {
             this.folder = folder;
@@ -67,8 +59,6 @@ public class FileSystemWatcher implements Closeable {
                     StandardWatchEventKinds.ENTRY_CREATE,
                     StandardWatchEventKinds.ENTRY_MODIFY,
                     StandardWatchEventKinds.ENTRY_DELETE);
-
-
 
             Files.list(folder).forEach(file -> {
                 var fileName = file.getFileName().toString();
@@ -119,7 +109,8 @@ public class FileSystemWatcher implements Closeable {
                         try {
                             var fileName = file.getFileName().toString();
                             var filePath = getRelative(fileName);
-                            if (Objects.equals(parent.getIgnored().checkIgnored(filePath, Files.isDirectory(file)), true)) return;
+                            if (Objects.equals(
+                                    parent.getIgnored().checkIgnored(filePath, Files.isDirectory(file)), true)) return;
                             result.computeIfAbsent(stem, (it) -> new HashMap<>())
                                     .put(
                                             fileName,
@@ -216,7 +207,8 @@ public class FileSystemWatcher implements Closeable {
 
                             var fileName = file.getFileName().toString();
                             var filePath = getRelative(fileName);
-                            if (Objects.equals(parent.getIgnored().checkIgnored(filePath, Files.isDirectory(file)), true)) return;
+                            if (Objects.equals(
+                                    parent.getIgnored().checkIgnored(filePath, Files.isDirectory(file)), true)) return;
 
                             if (Files.isDirectory(file)) {
                                 if (filePath.equals(".git")) return;
