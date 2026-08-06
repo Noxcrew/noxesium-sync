@@ -1,11 +1,14 @@
 package com.noxcrew.noxesium.sync.filesystem;
 
 import com.noxcrew.noxesium.api.NoxesiumApi;
+
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchKey;
 import java.util.HashMap;
@@ -14,6 +17,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.eclipse.jgit.ignore.IgnoreNode;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -51,8 +56,6 @@ public class FileSystemWatcher implements Closeable {
     @NotNull
     private final Map<String, FileSystemWatcher> directories = new ConcurrentHashMap<>();
 
-    @NotNull
-    private final Set<String> gitIgnored = new HashSet<>();
 
     public FileSystemWatcher(@NotNull Path folder, @NotNull String path, @NotNull ParentFileSystemWatcher parent) {
         try {
@@ -65,23 +68,24 @@ public class FileSystemWatcher implements Closeable {
                     StandardWatchEventKinds.ENTRY_MODIFY,
                     StandardWatchEventKinds.ENTRY_DELETE);
 
-            // Read the gitignore file to find anything that should not be synced.
-            gitIgnored.add(".git");
-            // TODO implement .gitignore support!
+
 
             Files.list(folder).forEach(file -> {
                 var fileName = file.getFileName().toString();
+                var filePath = getRelative(fileName);
+                if (Objects.equals(parent.getIgnored().checkIgnored(filePath, Files.isDirectory(file)), true)) return;
 
                 // Create new sub-watchers for all folders
                 if (Files.isDirectory(file)) {
-                    if (gitIgnored.contains(fileName)) return;
-                    directories.put(fileName, new FileSystemWatcher(file, getRelative(fileName), parent));
+                    // Always ignore the .git folder!
+                    if (filePath.equals(".git")) return;
+                    directories.put(fileName, new FileSystemWatcher(file, filePath, parent));
                 } else {
                     // Mark down for all regular files when they were last edited so we can
                     // ignore any modifications that do not exceed that time.
                     try {
                         parent.markPresent(
-                                getRelative(file.getFileName().toString()),
+                                filePath,
                                 Files.getLastModifiedTime(file, LinkOption.NOFOLLOW_LINKS)
                                         .toMillis());
                     } catch (Exception x) {
@@ -113,9 +117,12 @@ public class FileSystemWatcher implements Closeable {
                     .filter(it -> getSize(it) <= MAX_FILE_SIZE)
                     .forEach(file -> {
                         try {
+                            var fileName = file.getFileName().toString();
+                            var filePath = getRelative(fileName);
+                            if (Objects.equals(parent.getIgnored().checkIgnored(filePath, Files.isDirectory(file)), true)) return;
                             result.computeIfAbsent(stem, (it) -> new HashMap<>())
                                     .put(
-                                            file.getFileName().toString(),
+                                            fileName,
                                             Files.getLastModifiedTime(file, LinkOption.NOFOLLOW_LINKS)
                                                     .toMillis());
                         } catch (Exception x) {
@@ -141,11 +148,12 @@ public class FileSystemWatcher implements Closeable {
                     var fileName = file.getFileName().toString();
                     var filePath = getRelative(fileName);
                     var isDirectory = Files.isDirectory(file);
+                    if (Objects.equals(parent.getIgnored().checkIgnored(filePath, isDirectory), true)) continue;
 
                     if (Objects.equals(event.kind(), StandardWatchEventKinds.ENTRY_CREATE)) {
                         if (isDirectory) {
-                            // Ignore .gitignored files!
-                            if (gitIgnored.contains(fileName)) continue;
+                            // Always ignore the .git folder!
+                            if (filePath.equals(".git")) continue;
                             var oldWatcher = directories.put(fileName, new FileSystemWatcher(file, filePath, parent));
                             if (oldWatcher != null) {
                                 oldWatcher.close();
@@ -208,8 +216,10 @@ public class FileSystemWatcher implements Closeable {
 
                             var fileName = file.getFileName().toString();
                             var filePath = getRelative(fileName);
+                            if (Objects.equals(parent.getIgnored().checkIgnored(filePath, Files.isDirectory(file)), true)) return;
 
                             if (Files.isDirectory(file)) {
+                                if (filePath.equals(".git")) return;
                                 var watcher = directories.remove(fileName);
                                 if (watcher != null) {
                                     watcher.markDeleted();

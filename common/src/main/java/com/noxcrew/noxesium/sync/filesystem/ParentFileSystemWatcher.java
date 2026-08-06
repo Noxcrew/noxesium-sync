@@ -15,9 +15,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import net.minecraft.util.Util;
 import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.jgit.ignore.IgnoreNode;
 import org.jetbrains.annotations.NotNull;
 import org.mozilla.universalchardet.UniversalDetector;
 
@@ -54,13 +56,29 @@ public abstract class ParentFileSystemWatcher implements Closeable {
     @NotNull
     private final Map<String, Long> lastEditTimes = new HashMap<>();
 
+    @NotNull
+    private final IgnoreNode ignored = new IgnoreNode();
+
     public ParentFileSystemWatcher(@NotNull Path folder) {
         try {
+            // Read the .syncignore file to find file types that should not be synced.
+            var ignoreFile = folder.resolve(".syncignore");
+            if (Files.exists(ignoreFile)) {
+                ignored.parse(Files.newInputStream(ignoreFile));
+            }
+
             this.watchService = FileSystems.getDefault().newWatchService();
             this.parentWatcher = new FileSystemWatcher(folder, "", this);
         } catch (Exception x) {
             throw new RuntimeException("Failed to create watch service", x);
         }
+    }
+
+    /**
+     * Returns the .syncignore helper to find files to ignore when syncing.
+     */
+    public @NotNull IgnoreNode getIgnored() {
+        return ignored;
     }
 
     /**
@@ -143,6 +161,9 @@ public abstract class ParentFileSystemWatcher implements Closeable {
                         // If this file is not a binary file (so a text file) we have
                         // to detect any CRLF line endings and filter these out.
                         var encoding = UniversalDetector.detectCharset(file);
+                        if (encoding == null) {
+                            encoding = "UTF-8";
+                        }
                         return split(
                                 path,
                                 modifyTime,

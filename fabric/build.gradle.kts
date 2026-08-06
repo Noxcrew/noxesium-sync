@@ -33,4 +33,5 @@ dependencies {
         api(target)
     }
     includeLibrary(libs.juniversalchardet)
+    includeLibrary(libs.jgit)
 }

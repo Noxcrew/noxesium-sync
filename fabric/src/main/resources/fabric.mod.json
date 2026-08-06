@@ -16,6 +16,9 @@
   "entrypoints": {
     "noxesium": [
       "com.noxcrew.noxesium.sync.NoxesiumSyncFabricEntrypoint"
+    ],
+    "modmenu": [
+      "com.noxcrew.noxesium.sync.modmenu.ModMenuIntegration"
     ]
   },
   "mixins": [

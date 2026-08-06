@@ -5,6 +5,7 @@ plugins {
 dependencies {
     minecraft(libs.minecraft)
     api(libs.juniversalchardet)
+    api(libs.jgit)
     api(libs.noxesium.api)
     api(libs.noxesium.nms)
 }

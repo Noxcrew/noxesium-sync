@@ -11,5 +11,6 @@ public class NoxesiumSync : JavaPlugin() {
         val noxesiumPaper = getPlugin(NoxesiumPaper::class.java)
         noxesiumPaper.registerEntrypoint { NoxesiumSyncPaperEntrypoint() }
         noxesiumPaper.registerNoxesiumCommand { syncCommand() }
+        println("registered!")
     }
 }

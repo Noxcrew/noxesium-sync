@@ -12,8 +12,12 @@ import com.noxcrew.noxesium.sync.network.clientbound.ClientboundSyncFilePacket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.CommonComponents;
@@ -26,6 +30,7 @@ import org.jetbrains.annotations.Nullable;
 public class FolderSyncSystem extends NoxesiumFeature implements BackgroundTaskFeature {
     private final Map<String, ClientParentFileSystemWatcher> activeFolders = new HashMap<>();
     private final Map<Integer, ClientParentFileSystemWatcher> watchersById = new HashMap<>();
+    private final Set<String> pendingSync = ConcurrentHashMap.newKeySet();
 
     public FolderSyncSystem() {
         SyncPackets.CLIENTBOUND_REQUEST_SYNC.addListener(
@@ -34,7 +39,7 @@ public class FolderSyncSystem extends NoxesiumFeature implements BackgroundTaskF
 
                     // Start a sync when the server requests it. The client has to confirm it first for this specific IP
                     // so random servers cannot start a request unless the client has already allowed it.
-                    reference.startSync(packet.id());
+                    reference.pendingSync.add(packet.id());
                 });
         SyncPackets.CLIENTBOUND_REQUEST_FILE.addListener(
                 this, ClientboundRequestFilePacket.class, (reference, packet, ignored) -> {
@@ -56,6 +61,12 @@ public class FolderSyncSystem extends NoxesiumFeature implements BackgroundTaskF
 
     @Override
     public void runAsync() {
+        var iterator = pendingSync.iterator();
+        while (iterator.hasNext()) {
+            var next = iterator.next();
+            iterator.remove();
+            startSync(next);
+        }
         for (var watcher : activeFolders.values()) {
             watcher.tickAsync();
         }
