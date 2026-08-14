@@ -2,7 +2,6 @@ package com.noxcrew.noxesium.sync.filesystem;
 
 import com.noxcrew.noxesium.api.NoxesiumApi;
 import com.noxcrew.noxesium.api.feature.NoxesiumFeature;
-import com.noxcrew.noxesium.core.fabric.util.BackgroundTaskFeature;
 import com.noxcrew.noxesium.sync.NoxesiumSyncConfig;
 import com.noxcrew.noxesium.sync.menu.NoxesiumFolderSyncScreen;
 import com.noxcrew.noxesium.sync.network.SyncPackets;
@@ -16,6 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.CommonComponents;
@@ -25,7 +25,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * Adds the folder syncing system.
  */
-public class FolderSyncSystem extends NoxesiumFeature implements BackgroundTaskFeature {
+public class FolderSyncSystem extends NoxesiumFeature {
     private final Map<String, ClientParentFileSystemWatcher> activeFolders = new HashMap<>();
     private final Map<Integer, ClientParentFileSystemWatcher> watchersById = new HashMap<>();
     private final Set<String> pendingSync = ConcurrentHashMap.newKeySet();
@@ -55,9 +55,14 @@ public class FolderSyncSystem extends NoxesiumFeature implements BackgroundTaskF
             if (!isRegistered()) return;
             activeFolders.values().forEach(ParentFileSystemWatcher::poll);
         });
+
+        // Check for file changes every 50ms
+        NoxesiumApi.getInstance().getThreadPool().scheduleWithFixedDelay(this::runAsync, 50, 50, TimeUnit.MILLISECONDS);
     }
 
-    @Override
+    /**
+     * Asynchronously checks for changes to folders.
+     */
     public void runAsync() {
         var iterator = pendingSync.iterator();
         while (iterator.hasNext()) {

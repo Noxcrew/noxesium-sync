@@ -30,7 +30,7 @@ fabric-loader = "0.19.3"
 fabric-api = "0.152.1+26.2"
 
 # Mods
-noxesium = "3.2.3"
+noxesium = "3.2.4-SNAPSHOT"
 modmenu = "20.0.0-beta.2"
 devlogin = "0.1.0.5"
 
